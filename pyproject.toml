@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geoid-toolkit"
-version = "1.1.3"
+version = "1.1.4"
 description = "Python tools for reading gravity model coefficients and calculating geoid heights"
 keywords = [
     "gravity fields",
@@ -14,13 +14,13 @@ keywords = [
 ]
 
 authors = [
-    {name = "Tyler Sutterley"},
-    {email = "tsutterl@uw.edu"}
+    { name = "Tyler Sutterley" },
+    { email = "tsutterl@uw.edu" },
 ]
 maintainers = [{ name = "geoid-toolkit contributors" }]
 license = "MIT"
 license-files = ["LICENSE"]
-readme = {file = "README.md", content-type = "text/markdown"}
+readme = { file = "README.md", content-type = "text/markdown" }
 
 requires-python = "~=3.6"
 dependencies = [
@@ -30,7 +30,7 @@ dependencies = [
     "python-dateutil",
 ]
 
-classifiers=[
+classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -51,8 +51,27 @@ Repository = "https://github.com/polargeodesy/geoid-toolkit"
 Issues = "https://github.com/polargeodesy/geoid-toolkit/issues"
 
 [project.optional-dependencies]
-all = ["cartopy", "gdal", "h5py", "jupyterlab", "matplotlib", "netCDF4", "notebook", "pyproj"]
-doc = ["docutils", "graphviz", "myst-nb", "numpydoc", "sphinx", "sphinx-argparse>=0.4", "sphinxcontrib-bibtex", "sphinx-design", "sphinx_rtd_theme"]
+all = [
+    "cartopy",
+    "gdal",
+    "h5py",
+    "jupyterlab",
+    "matplotlib",
+    "netCDF4",
+    "notebook",
+    "pyproj",
+]
+doc = [
+    "docutils",
+    "graphviz",
+    "myst-nb",
+    "numpydoc",
+    "sphinx-autobuild",
+    "sphinx-argparse>=0.4",
+    "sphinxcontrib-bibtex",
+    "sphinx-design",
+    "sphinx_rtd_theme",
+]
 dev = ["flake8", "pytest>=4.6", "pytest-cov", "pytest-xdist", "scipy"]
 
 [project.scripts]
@@ -69,10 +88,10 @@ minversion = "6.0"
 norecursedirs = ".git"
 addopts = "-n auto --verbose --capture=no"
 python_files = [
-    "test*.py"
+    "test*.py",
 ]
 testpaths = [
-    "test"
+    "test",
 ]
 
 [tool.coverage.run]
@@ -124,24 +143,41 @@ cwd = "doc/source/notebooks"
 description = "Start JupyterLab in the notebooks directory"
 
 [tool.pixi.tasks.export-env]
-args = [ { "arg" = "flags", "default" = "" } ]
+args = [{ "arg" = "flags", "default" = "" }]
 cmd = "pixi workspace export conda-environment {{ flags }} > environment.yml"
-description = "Export workspace to a conda environment file" 
+description = "Export workspace to a conda environment file"
 
 [tool.pixi.feature.doc.tasks.docs]
-args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
-cmd = "make {{ builder }} {{ flags }}"
+args = [
+    { "arg" = "builder", "default" = "html" },
+    { "arg" = "flags", "default" = "--jobs=auto" },
+    { "arg" = "auto", "default" = "" },
+]
+cmd = "sphinx-{{ auto }}build --builder={{ builder }} {{ flags }} source build/{{ builder }}"
 cwd = "doc"
 description = "Create documentation with sphinx"
 
+[tool.pixi.feature.doc.tasks.auto-docs]
+depends-on = [
+    { task = "docs", args = [
+        "html",
+        "--jobs=auto --open-browser --ignore='*.csv'",
+        "auto",
+    ] },
+]
+description = "Create documentation with sphinx and live-reload over a browser"
+
 [tool.pixi.feature.doc.tasks.clean-docs]
-args = [ { "arg" = "builder", "default" = "html"}, { "arg" = "flags", "default" = "" } ]
-cmd = "make clean && make {{ builder }} {{ flags }}"
-cwd = "doc"
+depends-on = [
+    { task = "docs", args = ["html", "--jobs=auto --fresh-env --write-all", ""] },
+]
 description = "Remove build artifacts and rebuild the documentation with sphinx"
 
 [tool.pixi.feature.dev.tasks.test]
-args = [ { "arg" = "flags", "default" = "" }, { "arg" = "test", "default" = "." } ]
+args = [
+    { "arg" = "flags", "default" = "" },
+    { "arg" = "test", "default" = "." },
+]
 cmd = "pytest {{ flags }} {{ test }}"
 cwd = "test"
 description = "Run the pytest suite"
@@ -151,7 +187,10 @@ cmd = "pytest -n=0 --cov=geoid_toolkit --junitxml=pytest.xml --cov-report=xml te
 description = "Run the pytest suite and create coverage reports"
 
 [tool.pixi.feature.dev.tasks.lint]
-args = [ { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" }, { "arg" = "test", "default" = "." } ]
+args = [
+    { "arg" = "flags", "default" = "--select=E9,F63,F7,F82 --show-source" },
+    { "arg" = "test", "default" = "." },
+]
 cmd = "flake8 {{ test }} --count {{ flags }} --statistics --extend-exclude 'build/,run/,*.ipynb_checkpoints/,.pixi/'"
 description = "Run flake8 to check for compilation errors"
 
